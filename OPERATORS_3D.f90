@@ -996,7 +996,9 @@ end if
 		END DO
 
 		IF(B1 .AND. B2 .AND. B3) THEN
-		    SURFACE_CURRENT%POINT_TYPE(I) = 5
+		    SURFACE_CURRENT%POINT_TYPE(I) = 6
+		ELSE IF((B1 .OR. B2) .AND. B3) THEN
+                    SURFACE_CURRENT%POINT_TYPE(I) = 5
 		ELSE IF(B1 .AND. B2) THEN
                     SURFACE_CURRENT%POINT_TYPE(I) = 4
                 END IF
@@ -1018,7 +1020,9 @@ end if
 		END DO
 
 		IF(B1 .AND. B2 .AND. B3) THEN
-		    SURFACE_CURRENT%POINT_TYPE(I) = 5
+		    SURFACE_CURRENT%POINT_TYPE(I) = 6
+		ELSE IF((B1 .OR. B2) .AND. B3) THEN
+                    SURFACE_CURRENT%POINT_TYPE(I) = 5
                 ELSE IF(B1 .AND. B2) THEN
                     SURFACE_CURRENT%POINT_TYPE(I) = 4
                 END IF
@@ -1282,7 +1286,7 @@ end if
                 
                 IF(ANGLE > 30. * PI/180.) THEN
                     RIDGE_EDGE(K,I) = .TRUE.
-                ELSE IF((NEW_POINT_TYPE(J1)==4 .OR. NEW_POINT_TYPE(J1)==5) .AND. (NEW_POINT_TYPE(J2)==4 .OR. NEW_POINT_TYPE(J2)==5)) THEN
+                ELSE IF((NEW_POINT_TYPE(J1) .GE. 4) .AND. (NEW_POINT_TYPE(J2) .GE. 4)) THEN
                     RIDGE_EDGE(K,I) = .TRUE.
                 ELSE IF(ANGLE > 8. * PI/180.) THEN
                     
@@ -1345,10 +1349,7 @@ end if
                 END DO
                 
                 IF(RIDGE_EDGE_NUM > 2) THEN
-                    IF(NEW_POINT_TYPE(J)==4) THEN
-                        B = .TRUE.
-                        NEW_POINT_TYPE(J) = 5
-                    ELSE IF(NEW_POINT_TYPE(J)==1 .OR. NEW_POINT_TYPE(J)==2) THEN
+                    IF (NEW_POINT_TYPE(J) == 1 .OR. NEW_POINT_TYPE(J) == 2 .OR. NEW_POINT_TYPE(J) == 4 .OR. NEW_POINT_TYPE(J) == 5) THEN
                         B = .TRUE.
                         NEW_POINT_TYPE(J) = 3
                     END IF
@@ -1807,7 +1808,6 @@ END IF
 	LOGICAL :: B
 	
 if(case1==1) then
-              
         NULLIFY(HASH0)
         CALL GENERATE_HASH(TYP,1,0,2, 1, 1, 1, HASH_NUM1, HASH_NUM2, HASH_NUM3, HASH_SIZE, HASH0)
         NULLIFY(HASH1)
@@ -1961,11 +1961,6 @@ SURFACE_CURRENT%POINT_DISTANCE = 100.
 				END IF
 			    END IF
 			END IF
-if(typ==1 .and. (i==202 .or. i==716)) then
-write(*,*) i
-write(*,*) aver1, aver2, R
-write(*,*) 
-end if
         	END IF
             END DO
 
@@ -1989,8 +1984,7 @@ end if
 	END DO
 	!$OMP END DO
 	CLOSE(21)
-else if(case1==2) then 
-     
+else if(case1==2) then        
         NULLIFY(HASH0)
         CALL GENERATE_HASH(TYP,2,0,2, 1, 1, 1, HASH_NUM1, HASH_NUM2, HASH_NUM3, HASH_SIZE, HASH0)
         NULLIFY(HASH1)
@@ -2315,9 +2309,8 @@ IF (FLAG) THEN
         FLAG = .FALSE.
         
         ALLOCATE(TEMP_ONINTERFACE(SURFACE_CASE%SURFACE_FACES_NUM))
-        
         TEMP_ONINTERFACE(:) = SURFACE_CASE%FACE_ONINTERFACE(:)
-        
+
         NULLIFY(HASH0)
         CALL GENERATE_HASH(2,2,0,2, 1, 1, 1, HASH_NUM1, HASH_NUM2, HASH_NUM3, HASH_SIZE, HASH0)
         NULLIFY(HASH1)
@@ -2816,12 +2809,13 @@ end if
         INTEGER :: TYP1, TYP2
         INTEGER :: I,J,K,L,M, I1, I2, I3, I4, I5, I6, I7, J1,J2,J3,IDX,NUM
 	INTEGER :: RIDGE_POINT_NUM, RIDGE_EDGE_NUM, FACE_INDEX !MINIDX1, MINIDX2, FACE_INDEX
-        INTEGER :: JMIN, case1, N1
+        INTEGER :: JMIN, case1
 	CHARACTER(500) :: STR, STR1, STR2
         REAL(8) :: RMIN, COORD, DIST, TEMPDIST
         LOGICAL :: B, ISPROJ
         TYPE(SURFACE_TYPE), POINTER :: SURFACE_CURRENT1, SURFACE_CURRENT2
         TYPE(HASH), POINTER :: CURRENT_HASH, TEMP_HASH, NBHD_HASH
+        INTEGER :: N1
 	INTEGER, ALLOCATABLE :: RIDGE_EDGE(:,:)
 	REAL(8) :: DIST1, DIST2, DIST3 !MINDIST
         IF (TYP1==0) THEN
@@ -2846,7 +2840,8 @@ end if
 
 if(case1 ==1)  then
         K = TYP2 + 1
-        SURFACE_CURRENT1%POINT_RELATEDFACE(K,:) = 0      
+        SURFACE_CURRENT1%POINT_RELATEDFACE(K,:) = 0
+        
         NULLIFY(CURRENT_HASH)
         CALL GENERATE_HASH(TYP1,1,TYP2,2, 1, 1, 1, HASH_NUM1, HASH_NUM2, HASH_NUM3, HASH_SIZE, CURRENT_HASH)
 
@@ -3197,6 +3192,7 @@ END IF
         INTEGER :: N1
 	INTEGER, ALLOCATABLE :: RIDGE_EDGE(:,:)
 	REAL(8) :: DIST1, DIST2, DIST3, MINDIST
+
         IF (TYP1==0) THEN
             SURFACE_CURRENT1 => SURFACE_FLUID
         END IF
